@@ -8,7 +8,7 @@
  * nudges the user towards Arabic spellings and likely ASR mishearings.
  */
 
-import { useState } from "react"
+import { useId, useState } from "react"
 import { Bell, Plus, ShieldCheck, Volume2, X } from "lucide-react"
 import { useHader } from "@/components/providers/hader-provider"
 import { useHistory } from "@/lib/history"
@@ -249,14 +249,7 @@ export default function SettingsPage() {
             >
               Request notifications
             </Button>
-            <Button
-              onClick={async () => {
-                const ok = await session_primeAudio()
-                if (!ok) return
-              }}
-            >
-              Test alarm audio
-            </Button>
+            <Button onClick={() => void playTestTone()}>Test alarm audio</Button>
           </div>
         </div>
       </Card>
@@ -279,8 +272,12 @@ export default function SettingsPage() {
   )
 }
 
-/** Primes the audio element so the first real alarm is not blocked by autoplay. */
-async function session_primeAudio(): Promise<boolean> {
+/**
+ * Plays a short test tone. Doubles as an autoplay unlock: browsers only allow
+ * audio after a user gesture, so pressing this button here means the first real
+ * alarm during a lecture is not silently blocked.
+ */
+async function playTestTone(): Promise<boolean> {
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
     const ctx = new Ctx()
@@ -310,17 +307,26 @@ function Field({
   onChange(value: string): void
   placeholder?: string
 }) {
+  // Explicit htmlFor/id pairing instead of relying on the wrapping label, so
+  // assistive tech and automated checks both resolve the accessible name.
+  const id = useId()
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={id}
+        className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+      >
+        {label}
+      </label>
       <input
+        id={id}
         value={value}
         dir="auto"
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         className="min-h-11 rounded-lg border border-border bg-secondary/40 px-3 text-xs outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
       />
-    </label>
+    </div>
   )
 }
 

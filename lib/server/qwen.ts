@@ -51,21 +51,26 @@ function normalizeRegion(value: string | undefined): QwenRegion {
 
 /** Reads config from the server environment. Never throws for a probe. */
 export function readQwenConfig(): { ok: true; config: QwenConfig } | { ok: false; missing: string[] } {
-  const apiKey = process.env.QWEN_API_KEY?.trim() ?? ""
+  // QWEN_API_KEY is the documented name. API_KEY is accepted as a fallback
+  // because some deployments provision the DashScope key under that name.
+  const apiKey = (process.env.QWEN_API_KEY ?? process.env.API_KEY)?.trim() ?? ""
   const missing: string[] = []
   if (!apiKey) missing.push("QWEN_API_KEY")
 
   if (missing.length) return { ok: false, missing }
 
-  const region = normalizeRegion(process.env.QWEN_REGION)
+  // The *_2 variants exist in some environments; either name is honoured.
+  const region = normalizeRegion(process.env.QWEN_REGION ?? process.env.QWEN_REGION_2)
   return {
     ok: true,
     config: {
       apiKey,
       workspaceId: process.env.QWEN_WORKSPACE_ID?.trim() ?? "",
       region,
-      asrModel: process.env.QWEN_ASR_MODEL?.trim() || "qwen3-asr-flash",
-      textModel: process.env.QWEN_TEXT_MODEL?.trim() || "qwen-plus",
+      asrModel:
+        (process.env.QWEN_ASR_MODEL ?? process.env.QWEN_ASR_MODEL_2)?.trim() || "qwen3-asr-flash",
+      textModel:
+        (process.env.QWEN_TEXT_MODEL ?? process.env.QWEN_TEXT_MODEL_2)?.trim() || "qwen-plus",
       host: REGION_HOSTS[region],
     },
   }

@@ -121,7 +121,15 @@ function FrameInner({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
 
-        <main id="main" className="min-w-0 flex-1 pb-24 lg:pb-8">
+        {/*
+          The mobile tab bar is fixed, so content needs real clearance or the
+          last control of a long form sits under it and cannot be tapped.
+          Nav rows are min-h-14 (56px) plus the device safe-area inset.
+        */}
+        <main
+          id="main"
+          className="min-w-0 flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-8"
+        >
           {children}
         </main>
       </div>
