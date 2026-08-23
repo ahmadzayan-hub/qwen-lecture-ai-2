@@ -17,6 +17,13 @@ export function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`
 }
 
+/** HH:MM:SS wall clock. Accepts an ISO string or epoch ms. */
+export function formatClock(input: string | number): string {
+  const date = typeof input === "number" ? new Date(input) : new Date(input)
+  if (Number.isNaN(date.getTime())) return "--:--"
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+}
+
 /** Detects the dominant script so we can set dir/lang per line. */
 export function scriptOf(text: string): "ar" | "en" | "mixed" {
   const arabic = (text.match(/[\u0621-\u064A]/g) ?? []).length

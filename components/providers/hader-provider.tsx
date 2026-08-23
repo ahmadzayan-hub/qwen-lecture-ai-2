@@ -8,8 +8,9 @@
  * reads the same live state.
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import { useHaderSession, type HaderSessionApi } from "@/lib/session/use-hader-session"
+import { saveSession, summarize } from "@/lib/history"
 import { DEFAULT_PREFERENCES, type Preferences } from "@/lib/defaults"
 import type { LectureProfile, NameProfile } from "@/lib/types"
 import { DEFAULT_LECTURE_PROFILE, DEFAULT_NAME_PROFILE } from "@/lib/defaults"
@@ -95,6 +96,51 @@ export function HaderProvider({ children }: { children: React.ReactNode }) {
     preferences,
     language: lecture.language,
   })
+
+  /**
+   * Archive the session when it ends.
+   *
+   * The orchestrator clears its live state on stop, so we mirror the pieces we
+   * need into refs while the session is running and write the summary on the
+   * transition into ENDED. Only counters and matched phrases are stored.
+   */
+  const snapshot = useRef<{
+    sessionId: string | null
+    startedAt: number | null
+    events: HaderSessionApi["events"]
+    isDemo: boolean
+  }>({ sessionId: null, startedAt: null, events: [], isDemo: false })
+
+  useEffect(() => {
+    if (session.sessionId) {
+      snapshot.current = {
+        sessionId: session.sessionId,
+        startedAt: session.startedAt,
+        events: session.events,
+        isDemo: session.isDemo,
+      }
+    }
+  }, [session.sessionId, session.startedAt, session.events, session.isDemo])
+
+  const archived = useRef<string | null>(null)
+  useEffect(() => {
+    if (session.state !== "ENDED") return
+    const snap = snapshot.current
+    if (!snap.sessionId || !snap.startedAt) return
+    if (archived.current === snap.sessionId) return
+    archived.current = snap.sessionId
+    saveSession(
+      summarize(
+        snap.sessionId,
+        lecture.course,
+        snap.startedAt,
+        Date.now(),
+        // Detection events only; transcripts stay in memory unless opted in.
+        snap.events,
+        snap.isDemo,
+      ),
+    )
+  }, [session.state, lecture.course])
 
   const needsSetup = useMemo(() => {
     const hasName = Boolean(profile.fullName || profile.firstName || profile.aliases.length || profile.arabicAliases.length)

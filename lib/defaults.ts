@@ -12,6 +12,9 @@ export const EMPTY_NAME_PROFILE: NameProfile = {
   arabicAliases: [],
 }
 
+/** Alias kept so call sites can read either name. */
+export const DEFAULT_NAME_PROFILE = EMPTY_NAME_PROFILE
+
 export const DEFAULT_LECTURE_PROFILE: LectureProfile = {
   id: "default",
   course: "",
