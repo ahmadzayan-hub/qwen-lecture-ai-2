@@ -55,14 +55,9 @@ export const SESSION_STATES = [
 
 export type SessionState = (typeof SESSION_STATES)[number]
 
-export type AsrEngineId =
-  | "qwen-realtime"
-  | "qwen-chunked"
-  | "browser-speech"
-  | "simulation"
-  | "none"
+export type AsrEngineId = "QWEN_CHUNKED" | "BROWSER_NATIVE" | "SIMULATION" | "NONE"
 
-export type AsrConnectionState =
+export type AsrStatus =
   | "OFFLINE"
   | "CONNECTING"
   | "CONNECTED"
@@ -71,17 +66,25 @@ export type AsrConnectionState =
   | "DEGRADED"
   | "ERROR"
 
-export type AudioSourceMode = "system" | "microphone" | "simulation"
+/** Kept as an alias so older call sites stay valid. */
+export type AsrConnectionState = AsrStatus
+
+export type AudioSource = "SYSTEM_AUDIO" | "MICROPHONE" | "SIMULATION"
 
 export type TranscriptSegment = {
   id: string
-  sessionId: string
   text: string
   /** Partial results are hypotheses and must render differently. */
   isFinal: boolean
   startedAt: number
-  language: "ar" | "en" | "mixed"
+  receivedAt: number
   engine: AsrEngineId
+  /** Round trip for this chunk, when the engine can measure it. */
+  latencyMs?: number
+  /** True only for scripted simulation output. Drives the DEMO badge. */
+  isDemo?: boolean
+  sessionId?: string
+  language?: "ar" | "en" | "mixed"
   /** Present when the detector matched this segment. */
   detection?: {
     type: DetectionType
@@ -108,7 +111,7 @@ export type LectureProfile = {
   lecturer: string
   language: "ar" | "en" | "both"
   sensitivity: Sensitivity
-  preferredSource: AudioSourceMode
+  preferredSource: AudioSource
   responsePhrase: string
   alertSound: "siren" | "chime" | "voice"
   keywords: string[]
@@ -160,6 +163,49 @@ export type PairedDevice = {
   online: boolean
   lastSeen: string
   battery?: number
+}
+
+/**
+ * SUPABASE reaches other machines. LOCAL only reaches other tabs of the same
+ * browser — the UI must say so rather than implying a paired phone.
+ */
+export type PairingTransport = "SUPABASE" | "LOCAL"
+
+export type DevicePeer = {
+  deviceId: string
+  deviceName: string
+  role: DeviceRole
+  platform: string
+  online: boolean
+  /** Epoch ms of the last heartbeat. */
+  lastSeen: number
+  batteryLevel?: number
+}
+
+export type RealtimeMessageType =
+  | "HEARTBEAT"
+  | "ALERT"
+  | "ESCALATE"
+  | "RESOLVED"
+  | "SESSION_STATE"
+  | "TRANSCRIPT"
+
+export type RealtimeMessage = {
+  type: RealtimeMessageType
+  deviceId: string
+  sentAt: number
+  deviceName?: string
+  role?: DeviceRole
+  platform?: string
+  batteryLevel?: number
+  /** Payload for ALERT / ESCALATE. */
+  event?: DetectionEvent
+  /** Payload for SESSION_STATE. */
+  state?: SessionState
+  /** Payload for TRANSCRIPT. */
+  text?: string
+  /** How the alert was resolved. */
+  resolution?: "CONFIRMED" | "FALSE_ALARM" | "STOPPED"
 }
 
 export type SessionSummary = {

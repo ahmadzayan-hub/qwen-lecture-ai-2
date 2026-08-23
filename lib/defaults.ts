@@ -18,7 +18,7 @@ export const DEFAULT_LECTURE_PROFILE: LectureProfile = {
   lecturer: "",
   language: "both",
   sensitivity: "high",
-  preferredSource: "system",
+  preferredSource: "SYSTEM_AUDIO",
   responsePhrase: "Present",
   alertSound: "siren",
   keywords: [],
