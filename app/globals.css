@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/**
+ * HADER AI design tokens.
+ *
+ * Direction: AI operations centre. Dark instrument panel, one cool accent for
+ * the product, and status colours that are reserved strictly for status —
+ * green means healthy, amber means degraded, red means a live alarm. Red is
+ * never decorative, so when the screen goes red it means exactly one thing.
+ */
+
+@theme inline {
+  /* Arabic face follows Inter so Arabic glyphs resolve instead of rendering tofu. */
+  --font-sans: var(--font-inter), var(--font-plex-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), var(--font-plex-arabic), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-good: var(--good);
+  --color-good-foreground: var(--good-foreground);
+  --color-warn: var(--warn);
+  --color-warn-foreground: var(--warn-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Instrument-panel dark. Slightly blue-shifted so the accent feels native. */
+  --background: oklch(0.16 0.018 264);
+  --foreground: oklch(0.97 0.006 264);
+
+  --card: oklch(0.21 0.021 264);
+  --card-foreground: oklch(0.97 0.006 264);
+  --popover: oklch(0.19 0.02 264);
+  --popover-foreground: oklch(0.97 0.006 264);
+
+  /* Primary: the Hader signal blue. */
+  --primary: oklch(0.65 0.19 258);
+  --primary-foreground: oklch(0.15 0.02 264);
+
+  --secondary: oklch(0.27 0.026 264);
+  --secondary-foreground: oklch(0.97 0.006 264);
+
+  --muted: oklch(0.25 0.022 264);
+  --muted-foreground: oklch(0.7 0.024 264);
+
+  --accent: oklch(0.62 0.2 292);
+  --accent-foreground: oklch(0.97 0.006 264);
+
+  /* Status. Reserved — never used for decoration. */
+  --good: oklch(0.72 0.16 162);
+  --good-foreground: oklch(0.15 0.02 264);
+  --warn: oklch(0.78 0.15 78);
+  --warn-foreground: oklch(0.18 0.02 264);
+  --destructive: oklch(0.62 0.23 22);
+  --destructive-foreground: oklch(0.98 0.005 264);
+
+  --border: oklch(0.3 0.024 264);
+  --input: oklch(0.28 0.024 264);
+  --ring: oklch(0.65 0.19 258);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  /* Arabic needs a slightly looser line box to avoid clipped diacritics. */
+  [lang="ar"],
+  [dir="rtl"] {
+    line-height: 1.75;
+  }
+}
+
+@layer utilities {
+  /* Tabular figures for timers and confidence — stops layout jitter. */
+  .nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .glass {
+    background: color-mix(in oklab, var(--card) 82%, transparent);
+    backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  /* Respect reduced-motion for every animation defined below. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-breathe,
+    .animate-alarm,
+    .animate-ping-slow {
+      animation: none !important;
+    }
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+@keyframes alarm {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--destructive) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 18px color-mix(in oklab, var(--destructive) 0%, transparent);
+  }
+}
+
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+.animate-alarm {
+  animation: alarm 1.1s ease-out infinite;
+}
+.animate-ping-slow {
+  animation: ping-slow 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
